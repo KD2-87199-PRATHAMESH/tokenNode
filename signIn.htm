@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="jquery-3.7.1.min.js"></script>
+</head>
+
+<body>
+    <center>
+        <h1>Sign In</h1>
+        <label for="user">Username: </label>
+        <input type="text" id="user">
+        <label for="pass">Password: </label>
+        <input type="password" id="pass">
+        <button onclick="Stor()">Submit</button>
+        <a href="signUp.htm">go to sign in</a>
+    </center>
+    <script>
+        function Stor() {
+            const helper = new XMLHttpRequest();
+            helper.onreadystatechange = () => {
+                if (helper.readyState == 4 && helper.status == 200) {
+                    const result = JSON.parse(helper.responseText);
+                    if (result.username == 1 && result.password == 1) {
+                        sessionStorage.setItem("token", result.token);
+                        location.href = "index.htm";
+                    }
+                    else if (result.username == 1) {
+                        console.log("password incorrect");
+                    }
+                    else {
+                        console.log("user not found");
+                    }
+                }
+            }
+            helper.open("POST", "http://127.0.0.1:9999/signin");
+            helper.setRequestHeader("Content-Type", "application/json");
+            helper.send(JSON.stringify({
+                "us": $("#user").val(),
+                "pass": $("#pass").val()
+            }));
+        }
+    </script>
+</body>
+
+</html>

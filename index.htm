@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="jquery-3.7.1.min.js"></script>
+</head>
+
+<body>
+    <h3 id="exp"></h3>
+    <button id="cl">GET</button>
+    <table>
+        <tr>
+            <th>SID</th>
+            <th>SNAME</th>
+            <th>OPERATIONS</th>
+        </tr>
+        <tbody id="nod">
+        </tbody>
+    </table>
+    <button id="po">POST</button>
+    <table>
+        <tr>
+            <th>SID</th>
+            <th>SNAME</th>
+        </tr>
+        <tr>
+            <td><input type="text" id="iid"></td>
+            <td><input type="text" id="namee"></td>
+        </tr>
+    </table>
+    <script>
+
+        function loadData(obj) {
+            const r = $("#nod");
+            r.empty();
+            obj.map((o) => {
+                r.append(`<tr id="${o.sid}r">
+                        <td>${o.sid}</td>
+                        <td>${o.sname}</td>
+                        <td id="${o.sid}t"><button onclick="del(${o.sid})">DELETE</button><button onclick="edit(${o.sid})">EDIT</button></td>
+                        </tr>
+                `);
+            });
+        }
+
+        function del(id) {
+            const helper = new XMLHttpRequest();
+            helper.onreadystatechange = () => {
+                if (helper.readyState == 4 && helper.status == 200) {
+                    const result = JSON.parse(helper.responseText);
+                    if (result.isValid == 0) {
+                        $("#exp").text("session expired log in again...!");
+                        window.setTimeout(function () {
+                            $("#exp").remove();
+                            sessionStorage.removeItem("token");
+                            location.href = "signIn.htm";
+                        }, 4000);
+                    }
+                    else {
+                        if (result.affectedRows) {
+                            $(`#${id}r`).remove();
+                        }
+                        else {
+                            console.log(result.sqlMessage);
+                        }
+                    }
+                }
+            }
+            helper.open("DELETE", "http://127.0.0.1:9999/employee/" + id);
+            helper.setRequestHeader("Authorization", sessionStorage.getItem("token"));
+            helper.send();
+        }
+
+        function putIt(id) {
+            const helper = new XMLHttpRequest();
+            helper.onreadystatechange = () => {
+                if (helper.readyState == 4 && helper.status == 200) {
+                    const result = JSON.parse(helper.responseText);
+                    if (result.isValid == 0) {
+                        $("#exp").text("session expired log in again...!");
+                        window.setTimeout(function () {
+                            $("#exp").remove();
+                            sessionStorage.removeItem("token");
+                            location.href = "signIn.htm";
+                        }, 4000);
+                    }
+                    else {
+                        if (result.affectedRows) {
+                            loadTable();
+                            $(`#${id}`).remove();
+                        }
+                        else {
+                            console.log(result.sqlMessage);
+                        }
+                    }
+                }
+            }
+            helper.open("PUT", "http://127.0.0.1:9999/employee/" + id);
+            helper.setRequestHeader("Content-Type", "application/json");
+            helper.setRequestHeader("Authorization", sessionStorage.getItem("token"));
+            helper.send(getData());
+        }
+
+        function edit(id) {
+            const helper = new XMLHttpRequest();
+            helper.onreadystatechange = () => {
+                if (helper.readyState == 4 && helper.status == 200) {
+                    const o = JSON.parse(helper.responseText);
+                    if (o.isValid == 0) {
+                        $("#exp").text("session expired log in again...!");
+                        window.setTimeout(function () {
+                            $("#exp").remove();
+                            sessionStorage.removeItem("token");
+                            location.href = "signIn.htm";
+                        }, 4000);
+                    }
+                    else {
+                        loadText(o[0].sid, o[0].sname);
+                        $(`#${id}t`).append(`<button id="${id}" onclick="putIt(${id})">DONE</button>`);
+                    }
+                }
+            }
+            helper.open("GET", "http://127.0.0.1:9999/employee/" + id);
+            helper.setRequestHeader("Authorization", sessionStorage.getItem("token"));
+            helper.send();
+        }
+
+        function loadText(i, n) {
+            $("#iid").val(i);
+            $("#namee").val(n);
+        }
+
+        function getData() {
+            const i = $("#iid");
+            const n = $("#namee");
+            const o = {
+                sid: parseInt(i.val()),
+                sname: n.val()
+            }
+            i.val("");
+            n.val("");
+            return JSON.stringify(o);
+        }
+
+        $("#po").click(() => {
+            const helper = new XMLHttpRequest();
+            helper.onreadystatechange = () => {
+                if (helper.readyState == 4 && helper.status == 200) {
+
+                    const result = JSON.parse(helper.responseText);
+                    if (result.isValid == 0) {
+                        $("#exp").text("session expired log in again...!");
+                        window.setTimeout(function () {
+                            $("#exp").remove();
+                            sessionStorage.removeItem("token");
+                            location.href = "signIn.htm";
+                        }, 4000);
+                    }
+                    else {
+                        if (result.affectedRows) {
+                            loadTable();
+                        }
+                        else {
+                            console.log(result.sqlMessage);
+                        }
+                    }
+                }
+            }
+            helper.open("POST", "http://127.0.0.1:9999/employee");
+            helper.setRequestHeader("Content-Type", "application/json");
+            helper.setRequestHeader("Authorization", sessionStorage.getItem("token"));
+            helper.send(getData());
+        });
+
+        function loadTable() {
+            const helper = new XMLHttpRequest();
+            helper.onreadystatechange = () => {
+                if (helper.readyState == 4 && helper.status == 200) {
+                    const result = JSON.parse(helper.responseText);
+                    if (result.isValid == 0) {
+                        $("#exp").text("session expired log in again...!");
+                        window.setTimeout(function () {
+                            $("#exp").remove();
+                            sessionStorage.removeItem("token");
+                            location.href = "signIn.htm";
+                        }, 4000);
+                    }
+                    else {
+                        if (result.sqlMessage) {
+                            console.log(result.sqlMessage);
+                        }
+                        else {
+                            loadData(result);
+                        }
+                    }
+                }
+            }
+            helper.open("GET", "http://127.0.0.1:9999/employee");
+            helper.setRequestHeader("Authorization", sessionStorage.getItem("token"));
+            helper.send();
+        }
+        $("#cl").click(loadTable);
+
+
+    </script>
+</body>
+
+</html>

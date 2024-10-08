@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="jquery-3.7.1.min.js"></script>
+</head>
+
+<body>
+    <center>
+        <h1>Sign Up</h1>
+        <label for="user">Username: </label>
+        <input type="text" id="user">
+        <label for="pass">Password: </label>
+        <input type="password" id="pass">
+        <button onclick="Stor()">Submit</button>
+        <a href="signIn.htm">go to sign in</a>
+    </center>
+    <script>
+        function Stor() {
+            const helper = new XMLHttpRequest();
+            helper.onreadystatechange = () => {
+                if (helper.readyState == 4 && helper.status == 200) {
+                    const result = JSON.parse(helper.responseText);
+                    if (result.affectedRows) {
+                        location.href = "signIn.htm";
+                    }
+                    else {
+                        console.log(result.sqlMessage);
+                    }
+                }
+            }
+            helper.open("POST", "http://127.0.0.1:9999/signup");
+            helper.setRequestHeader("Content-Type", "application/json");
+            helper.send(JSON.stringify({
+                "us": $("#user").val(),
+                "pass": $("#pass").val()
+            }));
+        }
+    </script>
+</body>
+
+</html>
